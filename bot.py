@@ -30,9 +30,9 @@ def save_current_hash(data):
 def notify(version):
     bot = Bot(token=TELEGRAM_TOKEN)
     message = (
-        f"🚀 Вышла новая версия Факторио!\n"
+        f"*🚀 Вышла новая версия Факторио!*\n"
         f"Ссылка на обновление: https://factorio.com/download\n"
-        f"Версия: {version}"
+        f"Версия: *{version}*"
     )
     bot.send_message(chat_id=CHAT_ID, text=message)
 
