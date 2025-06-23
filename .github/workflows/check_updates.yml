@@ -3,7 +3,7 @@ name: Check Factorio Updates
 on:
   schedule:
     - cron: '0 * * * *'  # Каждый час
-  workflow_dispatch:     # Запуск вручную
+  workflow_dispatch:     # Возможность ручного запуска
 
 jobs:
   check-updates:
@@ -16,7 +16,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: 3.11
+        python-version: '3.10'  # или '3.11'
 
     - name: Install dependencies
       run: |
@@ -29,12 +29,9 @@ jobs:
         CHAT_ID: ${{ secrets.CHAT_ID }}
       run: python bot.py
 
-    - name: Save new hash (если был обновлён)
+    - name: Commit updated hash file (если обновился)
       run: |
         git config user.name "github-actions"
         git config user.email "github-actions@github.com"
-        git diff --quiet || (
-          git add last_hash.txt && \
-          git commit -m "Update last_hash.txt" && \
-          git push
-        )
+        git add last_hash.txt || true
+        git diff --cached --quiet || (git commit -m "Update last_hash.txt" && git push)
