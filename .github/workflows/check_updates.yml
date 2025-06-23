@@ -2,7 +2,7 @@ name: Check Factorio Updates
 
 on:
   schedule:
-    - cron: '0 * * * *'  # Каждый час
+    - cron: '0 */2 * * *'  # Каждые 2 часа
   workflow_dispatch:     # Возможность ручного запуска
 
 jobs:
