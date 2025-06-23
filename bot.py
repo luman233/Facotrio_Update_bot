@@ -7,6 +7,7 @@ TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 CHAT_ID = os.getenv("CHAT_ID")
 URL = "https://factorio.com/download/sha256sums/"
 HASH_FILE = "last_hash.txt"
+PIN_FILE = "pin_id.txt"  # Здесь будем хранить ID закреплённого сообщения
 
 def fetch_sha256():
     response = requests.get(URL)
@@ -27,10 +28,21 @@ def save_current_hash(data):
     with open(HASH_FILE, 'w') as f:
         f.write(data)
 
-def notify(version):
-    bot = Bot(token=TELEGRAM_TOKEN)
+def load_pin_id():
+    if not os.path.exists(PIN_FILE):
+        return None
+    with open(PIN_FILE, 'r') as f:
+        return int(f.read().strip())
 
-    # Экранируем специальные символы для MarkdownV2
+def save_pin_id(message_id):
+    with open(PIN_FILE, 'w') as f:
+        f.write(str(message_id))
+
+def clear_pin_id():
+    if os.path.exists(PIN_FILE):
+        os.remove(PIN_FILE)
+
+def notify_and_pin(bot, version):
     version_escaped = version.replace('.', '\\.')
     message = (
         f"*🚀 Вышла новая версия Факторио\\!*\n"
@@ -38,9 +50,32 @@ def notify(version):
         f"Версия: *{version_escaped}*"
     )
 
-    bot.send_message(chat_id=CHAT_ID, text=message, parse_mode="MarkdownV2")
+    msg = bot.send_message(
+        chat_id=CHAT_ID,
+        text=message,
+        parse_mode="MarkdownV2",
+        disable_notification=True  # Без звука
+    )
+
+    bot.pin_chat_message(
+        chat_id=CHAT_ID,
+        message_id=msg.message_id,
+        disable_notification=True
+    )
+
+    save_pin_id(msg.message_id)
 
 def main():
+    bot = Bot(token=TELEGRAM_TOKEN)
+
+    pin_id = load_pin_id()
+    if pin_id:
+        try:
+            bot.unpin_chat_message(chat_id=CHAT_ID, message_id=pin_id)
+            clear_pin_id()
+        except Exception as e:
+            print(f"⚠️ Не удалось открепить сообщение: {e}")
+
     current = fetch_sha256()
     last = load_last_hash()
 
@@ -52,7 +87,7 @@ def main():
     if current != last:
         version = extract_version(current)
         if version:
-            notify(version)
+            notify_and_pin(bot, version)
         save_current_hash(current)
     else:
         print("Обновлений нет.")
