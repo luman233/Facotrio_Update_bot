@@ -29,12 +29,16 @@ def save_current_hash(data):
 
 def notify(version):
     bot = Bot(token=TELEGRAM_TOKEN)
+
+    # Экранируем специальные символы для MarkdownV2
+    version_escaped = version.replace('.', '\\.')
     message = (
-        f"*🚀 Вышла новая версия Факторио!*\n"
-        f"Ссылка на обновление: https://factorio.com/download\n"
-        f"Версия: *{version}*"
+        f"*🚀 Вышла новая версия Факторио\\!*\n"
+        f"Ссылка на обновление: [factorio\\.com](https://factorio.com/download)\n"
+        f"Версия: *{version_escaped}*"
     )
-    bot.send_message(chat_id=CHAT_ID, text=message)
+
+    bot.send_message(chat_id=CHAT_ID, text=message, parse_mode="MarkdownV2")
 
 def main():
     current = fetch_sha256()
